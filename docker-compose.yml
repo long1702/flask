@@ -1,0 +1,71 @@
+version: '2'
+
+services:
+    base:
+        build: ./
+        image: "${YOUNET_DOCKER_REGISTRY_URL}spam_monitor_system${SERVICE_VERSION}"
+
+    mongo:
+        image: mongo:3.4
+        ports:
+            - 27017:27017
+
+    run_integration_tests:
+        extends: 
+            service: base
+        command: bash -c "./scripts/run_integration_tests.sh"
+        volumes:
+            - ./:/source/spam_monitor_system         
+        environment: 
+        - DB_LINK=mongo
+        - DB_NAME=$DB_NAME
+        - SOLR_KEY=$SOLR_KEY
+        - DB_PORT=$DB_PORT
+        links: 
+            - mongo
+        depends_on:
+            - mongo
+
+        
+
+    run_all_tests:
+        extends: 
+            service: base
+        command: bash -c "./scripts/run_all_tests.sh"
+        volumes:
+            - ./:/source/spam_monitor_system  
+        environment: 
+        - DB_LINK=mongo
+        - DB_NAME=$DB_NAME
+        - SOLR_KEY=$SOLR_KEY
+        - DB_PORT=$DB_PORT
+        links:
+            - mongo
+        depends_on:
+            - mongo
+    
+    run_unit_tests:
+        extends: 
+            service: base
+        command: bash -c "./scripts/run_unit_tests.sh"
+        volumes:
+            - ./:/source/spam_monitor_system 
+          
+    app:
+        extends: 
+            service: base
+        command: bash -c "./scripts/run_service.sh"
+        volumes:
+            - ./:/source/spam_monitor_system  
+          
+        environment: 
+        - DB_LINK=mongo
+        - DB_NAME=$DB_NAME
+        - SOLR_KEY=$SOLR_KEY
+        - DB_PORT=$DB_PORT
+        ports:
+            - 4000:4000
+        links:
+            - mongo
+        depends_on:
+            - mongo
